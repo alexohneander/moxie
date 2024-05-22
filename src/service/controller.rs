@@ -5,11 +5,13 @@ use tracing::{error, info};
 
 const INGRESS_CLASS_NAME: &'static str = "moxie";
 
-pub struct IngressController {}
+pub struct IngressController {
+    // http_proxy: HttpProxy
+}
 
 impl IngressController {
     pub fn new() -> IngressController {
-        return IngressController {};
+        return IngressController {  };
     }
 
     pub async fn start_controller(&mut self) {
@@ -31,6 +33,10 @@ impl IngressController {
         watcher(ingresses, watcher::Config::default()).applied_objects()
             .try_for_each(|i| async move {
                 info!("Got Ingress: {}", i.name_any());
+
+                // Detect Change reload proxy
+                // self.http_proxy.
+
                 Ok(())
             })
             .await?;

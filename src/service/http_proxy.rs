@@ -53,22 +53,18 @@ impl ProxyHttp for LB {
         upstream_response
             .insert_header("Server", "moxie")
             .unwrap();
-        // because we don't support h3
-        upstream_response.remove_header("alt-svc");
 
         Ok(())
     }
         
 }
 
-pub struct HttpProxy {}
+pub struct HttpProxy {
+    proxy_server: Server
+}
 
 impl HttpProxy {
     pub fn new() -> Self {
-        HttpProxy {}
-    }
-
-    pub fn serve(&mut self) {
         let mut my_server = Server::new(None).unwrap();
         my_server.bootstrap();
 
@@ -79,6 +75,10 @@ impl HttpProxy {
 
         my_server.add_service(lb);
 
-        my_server.run_forever();
+        HttpProxy { proxy_server: my_server}
+    }
+
+    pub fn serve(self) {
+        self.proxy_server.run_forever();
     }
 }
