@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use pingora_http::{RequestHeader, ResponseHeader};
 use std::sync::Arc;
 use tracing::info;
 
@@ -30,7 +31,7 @@ impl ProxyHttp for LB {
     async fn upstream_request_filter(
         &self,
         _session: &mut Session,
-        upstream_request: &mut pingora_http::RequestHeader,
+        upstream_request: &mut RequestHeader,
         _ctx: &mut Self::CTX,
     ) -> Result<()> {
         upstream_request
@@ -38,6 +39,26 @@ impl ProxyHttp for LB {
             .unwrap();
         Ok(())
     }
+
+    async fn response_filter(
+        &self,
+        _session: &mut Session,
+        upstream_response: &mut ResponseHeader,
+        _ctx: &mut Self::CTX,
+    ) -> Result<()>
+    where
+        Self::CTX: Send + Sync,
+    {
+        // replace existing header if any
+        upstream_response
+            .insert_header("Server", "moxie")
+            .unwrap();
+        // because we don't support h3
+        upstream_response.remove_header("alt-svc");
+
+        Ok(())
+    }
+        
 }
 
 pub struct HttpProxy {}
